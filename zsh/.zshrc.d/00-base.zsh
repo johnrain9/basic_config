@@ -1,14 +1,18 @@
 export HISTFILE="$HOME/.zsh_history"
-export HISTSIZE=10000
-export SAVEHIST=10000
+export HISTSIZE=500000
+export SAVEHIST=500000
 export PROJECTS_DIR="${PROJECTS_DIR:-$HOME/projects}"
 
 setopt APPEND_HISTORY
 setopt INC_APPEND_HISTORY
 setopt SHARE_HISTORY
 setopt HIST_IGNORE_DUPS
+setopt HIST_IGNORE_ALL_DUPS
 setopt HIST_IGNORE_SPACE
+setopt HIST_SAVE_NO_DUPS
 setopt HIST_REDUCE_BLANKS
+setopt HIST_VERIFY
+setopt EXTENDED_HISTORY
 
 case "$(uname -s)" in
   Darwin)

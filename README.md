@@ -8,8 +8,8 @@ This repo is the source of truth for:
 - `~/.zshrc.d/*`
 - `~/.gitconfig`
 - `~/.local/bin/ffmpeg_wrap.sh`
-
-The repo uses a package-style layout that is compatible with `stow`, but it does not require `stow`. A checked-in `bootstrap.sh` script creates and maintains the symlinks directly so a new machine can be set up with only Git and a shell.
+- your default `~/projects` checkout layout
+- a manifest-driven project bootstrap flow
 
 ## Philosophy
 
@@ -19,13 +19,16 @@ The repo uses a package-style layout that is compatible with `stow`, but it does
 - Keep `$HOME` as the real home directory.
 - Default interactive shells to `~/projects` instead of changing `$HOME`.
 - Prefer `$HOME` and `PROJECTS_DIR` over hardcoded `/home/<user>` paths.
+- Make dotfile linking explicit and opt-in.
 
 ## Layout
 
 ```text
 basic_config/
-  bootstrap.sh
   README.md
+  setup.sh
+  bootstrap.sh
+  projects.manifest.tsv
   zsh/
     .zshrc
     .zshrc.d/
@@ -46,25 +49,7 @@ basic_config/
         ffmpeg_wrap.sh
 ```
 
-## How It Works
-
-`bootstrap.sh` symlinks the managed files into your home directory:
-
-- `zsh/.zshrc` -> `~/.zshrc`
-- `zsh/.zshrc.d` -> `~/.zshrc.d`
-- `git/.gitconfig` -> `~/.gitconfig`
-- `bin/.local/bin/ffmpeg_wrap.sh` -> `~/.local/bin/ffmpeg_wrap.sh`
-
-If a target already exists and is not already the expected symlink, the script moves it into a timestamped backup directory under `~/.dotfiles-backups/`.
-
-The script also:
-
-- creates `~/projects`
-- creates `~/.local/bin`
-- creates `~/.zshrc.local` from the example file if missing
-- creates `~/.gitconfig.local` from the example file if missing
-
-## Quick Start
+## Recommended Workflow
 
 On a new machine:
 
@@ -72,9 +57,90 @@ On a new machine:
 mkdir -p ~/projects
 git clone https://github.com/johnrain9/basic_config.git ~/projects/basic_config
 cd ~/projects/basic_config
-./bootstrap.sh
+./setup.sh
+./setup.sh link-dotfiles
 exec zsh
 ```
+
+That flow is intentional:
+
+- `setup.sh` clones any missing repos from the manifest
+- `setup.sh` does not touch your live `~/.zshrc` or `~/.gitconfig` by default
+- `setup.sh link-dotfiles` is the explicit step that activates the tracked shell config
+
+If you want to preview what would happen first:
+
+```bash
+./setup.sh --dry-run
+./setup.sh --dry-run --link-dotfiles
+```
+
+## Setup Script
+
+`setup.sh` is the top-level bootstrap script for the whole workspace.
+
+Default behavior:
+
+- create `PROJECTS_DIR` if needed
+- clone any missing repos from `projects.manifest.tsv`
+- skip repos that already exist locally
+- leave live dotfiles alone unless you explicitly request linking
+
+Useful commands:
+
+```bash
+./setup.sh
+./setup.sh status
+./setup.sh list
+./setup.sh --pull-existing
+./setup.sh --repo basic_config --repo CENTRAL
+./setup.sh --dry-run
+./setup.sh link-dotfiles
+./setup.sh --link-dotfiles
+PROJECTS_DIR=~/code ./setup.sh
+```
+
+Behavior details:
+
+- `list` prints the manifest only
+- `status` shows whether each manifest repo exists locally and also shows dotfile link status
+- `link-dotfiles` runs `bootstrap.sh` immediately and exits
+- `--link-dotfiles` runs project checkout first, then links dotfiles afterward
+- `--pull-existing` runs `git pull --ff-only` in repos that already exist
+- `--repo <name>` limits work to specific repos from the manifest
+- `--dry-run` prints planned actions without cloning or linking anything
+
+## Repo Manifest
+
+`projects.manifest.tsv` is the editable source of truth for project checkout.
+
+Format:
+
+```text
+repo_name<TAB>git_remote_url
+```
+
+Comment lines starting with `#` are ignored.
+
+If you want a new machine to clone more or fewer repos, edit this file.
+
+## Dotfile Linking
+
+`bootstrap.sh` is intentionally narrower than `setup.sh`. It only manages symlinks for the tracked dotfiles:
+
+- `zsh/.zshrc` -> `~/.zshrc`
+- `zsh/.zshrc.d` -> `~/.zshrc.d`
+- `git/.gitconfig` -> `~/.gitconfig`
+- `bin/.local/bin/ffmpeg_wrap.sh` -> `~/.local/bin/ffmpeg_wrap.sh`
+
+If a target already exists and is not already the expected symlink, `bootstrap.sh` moves it into a timestamped backup directory under `~/.dotfiles-backups/`.
+
+The script also:
+
+- creates `~/projects`
+- creates `~/.local/bin`
+- creates `~/.zshrc.local` from the example file if missing
+- creates `~/.gitconfig.local` from the example file if missing
 
 ## Zsh Loading Model
 
@@ -179,34 +245,29 @@ helper = !gh auth git-credential
 
 That works on both WSL2 and macOS as long as the GitHub CLI is installed and authenticated.
 
-## Adding More Dotfiles
+## Adding More Dotfiles or Repos
 
-Follow the existing package layout:
+To add a new repo to the checkout flow:
 
-- put shell files under `zsh/`
-- put git files under `git/`
-- put CLI scripts in `bin/.local/bin/`
+1. Add a line to `projects.manifest.tsv`.
+2. Run `./setup.sh status` to confirm how it will be handled.
+3. Run `./setup.sh` or `./setup.sh --dry-run`.
 
-Then update `bootstrap.sh` to link the new files.
+To add a new managed dotfile:
 
-## Optional Stow Usage
-
-If `stow` is installed later, this repo layout is close to what `stow` expects:
-
-```bash
-cd ~/projects/basic_config
-stow zsh git bin
-```
-
-This repository does not depend on that workflow, but it remains compatible with it.
+1. Put the tracked file in the appropriate package directory.
+2. Update `bootstrap.sh` to link it into `HOME`.
+3. Document the change here if it affects setup behavior.
 
 ## AI / Maintainer Map
 
 If another AI or user needs to modify this repo, start here:
 
-- `README.md`: explains the operating model and install flow
-- `bootstrap.sh`: defines the symlink contract into `$HOME`
-- `zsh/.zshrc`: the shell entrypoint
+- `README.md`: overall operating model and install flow
+- `setup.sh`: project bootstrap, clone policy, and dotfile-link entrypoints
+- `projects.manifest.tsv`: editable repo checkout manifest
+- `bootstrap.sh`: symlink contract into `$HOME`
+- `zsh/.zshrc`: shell entrypoint
 - `zsh/.zshrc.d/00-base.zsh`: shared environment, detection, prompt, and helpers
 - `zsh/.zshrc.d/30-tooling.zsh`: repo-aware shell functions for local tools
 - `git/.gitconfig`: shared Git defaults

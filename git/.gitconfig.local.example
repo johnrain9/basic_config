@@ -1,0 +1,5 @@
+# Machine-specific git config.
+# This file is copied to ~/.gitconfig.local by bootstrap.sh if it does not exist.
+
+# [core]
+#     editor = nvim

@@ -1,0 +1,7 @@
+# Machine-specific zsh overrides.
+# This file is copied to ~/.zshrc.local by bootstrap.sh if it does not exist.
+# Keep secrets and one-off aliases here instead of committing them.
+
+# export EDITOR="nvim"
+# export PROJECTS_DIR="$HOME/projects"
+# alias local-only="echo local override"

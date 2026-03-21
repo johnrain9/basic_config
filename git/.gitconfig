@@ -1,0 +1,14 @@
+[core]
+    autocrlf = input
+    eol = lf
+[credential "https://github.com"]
+    helper =
+    helper = !gh auth git-credential
+[credential "https://gist.github.com"]
+    helper =
+    helper = !gh auth git-credential
+[user]
+    name = paul
+    email = paul545@gmail.com
+[include]
+    path = ~/.gitconfig.local

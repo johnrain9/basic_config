@@ -84,14 +84,6 @@ aim() {
   "$repo/scripts/aim_control.py" "$@"
 }
 
-dispatcher() {
-  local repo
-  repo="$(dot_repo_dir CENTRAL)" || {
-    echo "Repo not found: CENTRAL"
-    return 1
-  }
-  "$repo/scripts/dispatcher_control.py" "$@"
-}
 
 i2v_legacy() {
   local comfy_dir

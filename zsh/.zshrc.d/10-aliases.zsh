@@ -1,3 +1,12 @@
+# Project directory shortcuts
+alias central='cd "$PROJECTS_DIR/CENTRAL"'
+alias eco='cd "$PROJECTS_DIR/ecosystem"'
+alias motohelper='cd "$PROJECTS_DIR/motoHelper"'
+alias aimsolo='cd "$PROJECTS_DIR/aimSoloAnalysis"'
+alias tagger='cd "$PROJECTS_DIR/photo_auto_tagging"'
+alias vwall='cd "$PROJECTS_DIR/video_wall"'
+alias vqueue='cd "$PROJECTS_DIR/video_queue"'
+
 alias gs="git status -sb"
 alias ga="git add"
 alias ..="cd .."

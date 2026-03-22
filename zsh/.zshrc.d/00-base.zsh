@@ -3,6 +3,8 @@ export HISTSIZE=500000
 export SAVEHIST=500000
 export PROJECTS_DIR="${PROJECTS_DIR:-$HOME/projects}"
 
+setopt AUTO_CD
+
 setopt APPEND_HISTORY
 setopt INC_APPEND_HISTORY
 setopt SHARE_HISTORY

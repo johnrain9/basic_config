@@ -84,6 +84,24 @@ aim() {
   "$repo/scripts/aim_control.py" "$@"
 }
 
+ai_sync() {
+  local repo
+  repo="$(dot_repo_dir basic_config)" || {
+    echo "Repo not found: basic_config"
+    return 1
+  }
+  "$repo/setup.sh" sync-ai "$@"
+}
+
+ai_status() {
+  local repo
+  repo="$(dot_repo_dir basic_config)" || {
+    echo "Repo not found: basic_config"
+    return 1
+  }
+  "$repo/setup.sh" status-ai "$@"
+}
+
 
 i2v_legacy() {
   local comfy_dir

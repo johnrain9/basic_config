@@ -8,6 +8,7 @@ This repo is the source of truth for:
 - `~/.zshrc.d/*`
 - `~/.gitconfig`
 - `~/.local/bin/ffmpeg_wrap.sh`
+- provider-agnostic AI skill and shared-memory sync
 - your default `~/projects` checkout layout
 - a manifest-driven project bootstrap flow
 
@@ -59,6 +60,7 @@ git clone https://github.com/johnrain9/basic_config.git ~/projects/basic_config
 cd ~/projects/basic_config
 ./setup.sh
 ./setup.sh link-dotfiles
+./setup.sh sync-ai
 exec zsh
 ```
 
@@ -67,6 +69,7 @@ That flow is intentional:
 - `setup.sh` clones any missing repos from the manifest
 - `setup.sh` does not touch your live `~/.zshrc` or `~/.gitconfig` by default
 - `setup.sh link-dotfiles` is the explicit step that activates the tracked shell config
+- `setup.sh sync-ai` is the explicit step that syncs tracked AI skills and shared memory into provider homes
 
 If you want to preview what would happen first:
 
@@ -91,12 +94,15 @@ Useful commands:
 ```bash
 ./setup.sh
 ./setup.sh status
+./setup.sh status-ai
 ./setup.sh list
 ./setup.sh --pull-existing
 ./setup.sh --repo basic_config --repo CENTRAL
 ./setup.sh --dry-run
 ./setup.sh link-dotfiles
 ./setup.sh --link-dotfiles
+./setup.sh sync-ai
+./setup.sh --sync-ai
 PROJECTS_DIR=~/code ./setup.sh
 ```
 
@@ -104,8 +110,11 @@ Behavior details:
 
 - `list` prints the manifest only
 - `status` shows whether each manifest repo exists locally and also shows dotfile link status
+- `status-ai` shows tracked AI skill and shared-memory parity status for Codex and Claude
 - `link-dotfiles` runs `bootstrap.sh` immediately and exits
+- `sync-ai` runs the AI parity sync immediately and exits
 - `--link-dotfiles` runs project checkout first, then links dotfiles afterward
+- `--sync-ai` runs project checkout first, then syncs shared skills and memory afterward
 - `--pull-existing` runs `git pull --ff-only` in repos that already exist
 - `--repo <name>` limits work to specific repos from the manifest
 - `--dry-run` prints planned actions without cloning or linking anything
@@ -141,6 +150,13 @@ The script also:
 - creates `~/.local/bin`
 - creates `~/.zshrc.local` from the example file if missing
 - creates `~/.gitconfig.local` from the example file if missing
+
+AI parity is intentionally separate from dotfile linking. Tracked shared skills and shared memory are synced with `setup.sh sync-ai`, which refreshes:
+
+- `~/.codex/skills/` and `~/.codex/memories/shared/`
+- `~/.claude/skills/` and `~/.claude/memories/shared/`
+
+This keeps durable AI context under version control instead of relying only on provider-local opaque state.
 
 ## Zsh Loading Model
 

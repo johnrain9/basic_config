@@ -1,0 +1,8 @@
+# target_name	source_path	providers
+shared-memory	ai/skills/shared-memory	both
+doc-review-bundles	../CENTRAL/skills/doc-review-bundles	both
+mobile-response	../CENTRAL/skills/mobile-response	both
+multi-repo-planner	../CENTRAL/skills/multi-repo-planner	both
+autonomy-planner	../CENTRAL/skills/autonomy-planner	both
+autonomy-operator	../CENTRAL/skills/autonomy-operator	both
+autonomy-triage	../CENTRAL/skills/autonomy-triage	both

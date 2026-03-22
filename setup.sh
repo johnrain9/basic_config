@@ -7,7 +7,9 @@ projects_dir="${PROJECTS_DIR:-$HOME/projects}"
 
 pull_existing=0
 link_dotfiles_after=0
+sync_ai_after=0
 status_only=0
+ai_status_only=0
 list_only=0
 dry_run=0
 declare -a selected_repos=()
@@ -17,12 +19,15 @@ usage() {
 Usage:
   ./setup.sh
   ./setup.sh --link-dotfiles
+  ./setup.sh --sync-ai
   ./setup.sh --pull-existing
   ./setup.sh --dry-run
   ./setup.sh --repo <name> [--repo <name> ...]
   ./setup.sh list
   ./setup.sh status
+  ./setup.sh status-ai
   ./setup.sh link-dotfiles
+  ./setup.sh sync-ai
   ./setup.sh --help
 
 Default behavior:
@@ -33,10 +38,13 @@ Default behavior:
 Commands:
   list            Print the repo manifest.
   status          Show manifest repos and whether they already exist locally.
+  status-ai       Show provider skill and shared-memory parity status.
   link-dotfiles   Run bootstrap.sh to link the repo-managed dotfiles into HOME.
+  sync-ai         Sync tracked AI skills and shared memory into provider homes.
 
 Options:
   --link-dotfiles Link dotfiles after repo checkout.
+  --sync-ai       Sync tracked AI skills and shared memory after repo checkout.
   --pull-existing Run 'git pull --ff-only' in repos that already exist.
   --dry-run       Print planned actions without cloning or linking anything.
   --repo <name>   Restrict work to one repo name from the manifest. Repeatable.
@@ -48,11 +56,13 @@ Environment:
 Examples:
   ./setup.sh
   ./setup.sh --repo basic_config --repo CENTRAL
-  ./setup.sh --pull-existing --link-dotfiles
+  ./setup.sh --pull-existing --link-dotfiles --sync-ai
   ./setup.sh --dry-run --repo photo_auto_tagging
   PROJECTS_DIR=~/code ./setup.sh
   ./setup.sh status
+  ./setup.sh status-ai
   ./setup.sh link-dotfiles
+  ./setup.sh sync-ai
 USAGE
 }
 
@@ -115,6 +125,20 @@ dotfile_status() {
   fi
 }
 
+run_ai_status() {
+  require_cmd python3
+  python3 "$repo_root/ai/sync_ai_parity.py" status
+}
+
+run_ai_sync() {
+  require_cmd python3
+  if [[ "$dry_run" -eq 1 ]]; then
+    python3 "$repo_root/ai/sync_ai_parity.py" sync --dry-run
+  else
+    python3 "$repo_root/ai/sync_ai_parity.py" sync
+  fi
+}
+
 show_status() {
   local name url local_path remote_url
 
@@ -136,6 +160,9 @@ show_status() {
   dotfile_status "$HOME/.zshrc.d" "$repo_root/zsh/.zshrc.d"
   dotfile_status "$HOME/.gitconfig" "$repo_root/git/.gitconfig"
   dotfile_status "$HOME/.local/bin/ffmpeg_wrap.sh" "$repo_root/bin/.local/bin/ffmpeg_wrap.sh"
+
+  echo
+  run_ai_status
 }
 
 checkout_repos() {
@@ -178,6 +205,9 @@ while [[ $# -gt 0 ]]; do
     status)
       status_only=1
       ;;
+    status-ai)
+      ai_status_only=1
+      ;;
     link-dotfiles)
       if [[ "$dry_run" -eq 1 ]]; then
         printf 'dry-run  %s/bootstrap.sh\n' "$repo_root"
@@ -186,8 +216,15 @@ while [[ $# -gt 0 ]]; do
       fi
       exit 0
       ;;
+    sync-ai)
+      run_ai_sync
+      exit 0
+      ;;
     --link-dotfiles)
       link_dotfiles_after=1
+      ;;
+    --sync-ai)
+      sync_ai_after=1
       ;;
     --pull-existing)
       pull_existing=1
@@ -232,6 +269,11 @@ if [[ "$status_only" -eq 1 ]]; then
   exit 0
 fi
 
+if [[ "$ai_status_only" -eq 1 ]]; then
+  run_ai_status
+  exit 0
+fi
+
 checkout_repos
 
 if [[ "$link_dotfiles_after" -eq 1 ]]; then
@@ -242,4 +284,10 @@ if [[ "$link_dotfiles_after" -eq 1 ]]; then
   fi
 else
   echo "dotfiles skipped; run './setup.sh link-dotfiles' when you want to link ~/.zshrc, ~/.gitconfig, and related files"
+fi
+
+if [[ "$sync_ai_after" -eq 1 ]]; then
+  run_ai_sync
+else
+  echo "ai parity skipped; run './setup.sh sync-ai' when you want to sync shared skills and memory into Codex and Claude"
 fi

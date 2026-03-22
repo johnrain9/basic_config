@@ -84,15 +84,23 @@ dot_primary_ip() {
 autoload -Uz compinit
 compinit
 
-_git_branch() {
-  git rev-parse --abbrev-ref HEAD 2>/dev/null
+# Cache git branch per-directory so we only call git rev-parse on cd,
+# not after every command. Avoids stutter when workers are doing git I/O.
+_CACHED_GIT_BRANCH=""
+_CACHED_GIT_DIR=""
+
+_update_git_branch_cache() {
+  local dir="$PWD"
+  if [[ "$dir" != "$_CACHED_GIT_DIR" ]]; then
+    _CACHED_GIT_DIR="$dir"
+    _CACHED_GIT_BRANCH="$(git rev-parse --abbrev-ref HEAD 2>/dev/null)"
+  fi
 }
 
 set_prompt() {
-  local branch
-  branch="$(_git_branch)"
-  if [[ -n "$branch" ]]; then
-    PROMPT="%F{cyan}%~%f %F{yellow}(${branch})%f %# "
+  _update_git_branch_cache
+  if [[ -n "$_CACHED_GIT_BRANCH" ]]; then
+    PROMPT="%F{cyan}%~%f %F{yellow}(${_CACHED_GIT_BRANCH})%f %# "
   else
     PROMPT="%F{cyan}%~%f %# "
   fi

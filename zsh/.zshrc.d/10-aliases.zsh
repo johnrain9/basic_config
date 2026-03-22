@@ -34,10 +34,11 @@ webui() {
 alias a1111="webui"
 
 if command -v eza >/dev/null 2>&1; then
-  alias ls="eza --group-directories-first --icons --git"
-  alias ll="eza -la --group-directories-first --icons --git"
+  alias ls="eza --group-directories-first --icons"
+  alias ll="eza -la --group-directories-first --icons"
   alias lt="eza --tree --level=2 --icons"
-  alias la="eza -a --group-directories-first --icons --git"
+  alias la="eza -a --group-directories-first --icons"
+  alias llg="eza -la --group-directories-first --icons --git"
 else
   alias ll="ls -lah"
   alias la="ls -A"
